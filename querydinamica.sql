@@ -2,32 +2,9 @@ CREATE DATABASE querydinamica
 GO
 USE querydinamica
 
-CREATE TABLE produto (
-idProduto             INT             NOT NULL,
-tipo                  VARCHAR(100),
-cor                   VARCHAR(50)
-PRIMARY KEY(idProduto)
-)
-GO
-
-CREATE TABLE camiseta (
-idProduto             INT             NOT NULL,
-tamanho               VARCHAR(3)     
-PRIMARY KEY(idProduto)
-FOREIGN KEY(idProduto) REFERENCES produto(idProduto)
-)
-GO
-
-CREATE TABLE tenis (
-idProduto             INT             NOT NULL,
-tamanho               INT
-PRIMARY KEY(idProduto)
-FOREIGN KEY(idProduto) REFERENCES produto(idProduto)
-)
-GO
 
 CREATE TABLE produto (
-codigo                INT      IDENTITY(101,1)       NOT NULL,
+codigo                INT             NOT NULL,
 nome                  VARCHAR(100),
 valor                 DECIMAL(7, 2)
 PRIMARY KEY(codigo)
@@ -56,10 +33,20 @@ GO
 
 CREATE PROCEDURE sp_empresa(@opcao CHAR(1),
 							@saida VARCHAR(100))
-
 AS 
+  DECLARE @query1 VARCHAR(100)
+  DECLARE @query2 VARCHAR(100)
+
+DECLARE @produto INT
+SET @produto = 0
+
 WHILE(SELECT COUNT(codigo) FROM produto ) != 10
 BEGIN
+
+
+
+  SET @produto += 1  
+
   DECLARE @quantidade INT
   SET @quantidade = CAST(((RAND() * 1) + 10)AS INT)
 
@@ -70,16 +57,23 @@ BEGIN
   SET @codigo = (SELECT codigo FROM produto)
 
 
+
   DECLARE @nome VARCHAR(100)
   SET @nome = 'espada'
 
   IF(LOWER(@opcao) = 'e') 
   BEGIN
-  INSERT INTO produto VALUES 
-  (@nome, @valor)
+  
+  SET @query1 = 'INSERT INTO produto VALUES 
+  ('+CAST(@produto AS VARCHAR(10))+', '''+@nome+''', '+CAST(@valor AS VARCHAR(100))+')'
+  Print(@query1) 
+EXEC (@query1)  
     
-	INSERT INTO entrada VALUES
-	(@codigo, @quantidade, @quantidade * @valor)
+	SET @query2 = 'INSERT INTO entrada VALUES
+	 ('+CAST(@produto AS VARCHAR(10))+', '+CAST(@quantidade AS VARCHAR(10))+', '+CAST((@quantidade * @valor) AS VARCHAR(10))+')'
+   Print @query2
+EXEC (@query2)
+
 	SET @saida = 'Produto comprado'
      END
 
@@ -88,11 +82,16 @@ BEGIN
 	 BEGIN
      IF(LOWER(@opcao) = 's') 
      BEGIN
-     INSERT INTO produto VALUES 
-     (@nome, @valor)
+  
+  SET @query1 = 'INSERT INTO produto VALUES 
+  ('+CAST(@produto AS VARCHAR(10))+', '''+@nome+''', '+CAST(@valor AS VARCHAR(100))+')'
+  Print(@query1) 
+EXEC (@query1)  
     
-	 INSERT INTO saida VALUES
-	 (@codigo, @quantidade, @quantidade * @valor)
+	SET @query2 = 'INSERT INTO saida VALUES
+	 ('+CAST(@produto AS VARCHAR(10))+', '+CAST(@quantidade AS VARCHAR(10))+', '+CAST((@quantidade * @valor) AS VARCHAR(10))+')'
+   Print @query2
+EXEC (@query2)
 	 SET @saida = 'Produto vendido'
 	 END
 
@@ -109,6 +108,7 @@ BEGIN
   EXEC sp_empresa 's', @OUT
   PRINT(@OUT)
 
-  SELECT * FROM  produto
-  SELECT * FROM  saida
+  SELECT * FROM produto
+  SELECT * FROM saida
   SELECT * FROM entrada
+ 
